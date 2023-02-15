@@ -1,0 +1,9 @@
+# Config file for selecting which targets to enable / detect during program execution
+# Please ensure that all config names below match their respective target filenames (eg. stopsign=1 works for stopsign.png)
+# Also: please ensure there are no blank lines in the file as spacers as these will end the reader early.
+# Each item in the targets folder should have a config line below. If a line is missing that target WILL NOT BE TRACKED!
+discord_call_full=1
+discord_call_half=1
+discord_text=1
+windows_firewall=1
+stopsign=1

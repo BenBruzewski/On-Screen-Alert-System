@@ -29,6 +29,14 @@ NOTE: I have made the filepath system dynamic. Logic and requirements as follows
         ex. myFolder/script.py, along with myFolder/image.png are NOT valid because we have no embedded targets folder
     3) The desktop screenshot will be automatically placed inside the same folder as your script (not targets folder)
 
+NOTE: This program has an accompanying config file which can be used to enable and disable different target images
+    By disabling a target image that a user knows they don't want to track some processing time can be saved.
+    The config file has comment lines which are prefixed with a '#', these lines will be ignored.
+    The config file uses 1 to enable tracking for a particular alert and 0 to disable tracking for any given alert
+    Alerts are given shorthand names in the config file to save space but the names are detailed enough to explain
+    PLEASE ensure that any config items added to the file match the name of their respective target image in the target
+        folder.
+
 """
 import pathlib
 import os
@@ -65,18 +73,42 @@ scriptPath = __file__  # get the file path for this program
 path = pathlib.Path(scriptPath)  # converting the file path to a pathlib type for methods
 pathHead = path.parent  # get the filepath without the script at the end of it (parent folder)
 pathScreenshot = pathHead  # get a spare copy to use for our desktop screenshot filepath later
+pathConfig = pathHead
+pathConfig = pathScreenshot.joinpath(pathScreenshot, 'config.txt')  # append the parent path with config file
 pathScreenshot = pathScreenshot.joinpath(pathScreenshot, 'screenshot1.png')  # append the screenshot name to the path
 pathScreenshot = pathlib.PureWindowsPath(pathScreenshot).as_posix()  # convert the screenshot filepath to Windows-style
 pathHead = pathHead.joinpath(pathHead, 'targets')  # append "targets" to the end since this is where we keep images
 fileList = os.listdir(pathHead)  # this holds all filepaths for files inside the "target" folder
+
+config = open(pathConfig, "r")  # open the config file in reading more
+keeperList = []
+finalFileList = []
+
+single = config.readline()  # get an initial line to begin the while loop. Make sure there are no blank lines
+
+while single != '':  # while we're not at the end of the file:
+    single = single.strip()  # remove \n from the end of each line for better analysis. This also removes whitespaces
+    if not single.__contains__("#"):  # if the line has a # it's a comment line, disregard this line. Else? keep it.
+        divided = single.split("=")  # dividing at the '=', so we can check the value after the '=' (0 or 1?)
+        if divided[1] == '1':  # if the second part is 1, we want to track this alert
+            keeperList.append(divided[0])  # add any items with a 1 to the keeper list (targets to track)
+    single = config.readline()  # read a line into the file for processing..., also last line of while loop
+config.close()  # close out of the config file since it's good practice to do this once finished.
+
+# print("fileList before loop: ", fileList)
+# print("keeperList = ", keeperList)
+
 fileCounter = 0  # using this in the following loop for indexing
 for f in fileList:  # for the number of items in fileList
-    fileList[fileCounter] = pathlib.Path(fileList[fileCounter]).joinpath(pathHead, fileList[fileCounter])
-    fileList[fileCounter] = pathlib.PureWindowsPath(fileList[fileCounter]).as_posix()  # convert to Windows-type paths
-    #  modify each item in fileList to become a pathlib object, so we can join it with its full parent path
-    fileCounter = fileCounter + 1  # move to the next item in the folder so that we can process each existing file
+    g = f.split('.')  # split at the filetype '.' to keep only the file's name.
 
-print(fileList[0])  # at this point we have the FULL filepath to each target image dynamically
+    if g[0] in keeperList:  # if file in targets was found in the keeperList (items we've marked in config.txt)...
+        h = pathlib.Path(f).joinpath(pathHead, f)  # ex. join directory path with stopsign.png for full path to image
+        # h = pathlib.PureWindowsPath(h.as_posix())  # changing slashes for later use with windows libraries
+        #  The pathlib library works with Linux-style paths, but we need windows-style paths for scanimage()
+        finalFileList.append(h)  # add all of our final filepaths to a list called finalFileList
+
+# print("final file list: ", finalFileList)  # this list is all targets we will actually track during program loop
 
 while 1:  # wait for user to press 'g' before we begin checking for alert matches
 
@@ -112,9 +144,9 @@ while 1:  # wait for user to press 'g' before we begin checking for alert matche
             # cv2.imshow("Screenshot", img)
 
             fileCounter = 0
-            for f in fileList:
-                scanimage(fileList[fileCounter])
-                fileCounter = fileCounter + 1
+            for f in finalFileList:  # for every item that made it to the final file list (keepers)
+                scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
+                fileCounter = fileCounter + 1  # increment to scan the next image in the list
 
             cv2.waitKey(0)  # pause the program while the image is displayed
     else:  # alt flow if wrong key is pressed
