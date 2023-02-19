@@ -7,13 +7,17 @@ window.minsize(900, 600)
 window.maxsize(900, 600)
 w, h = window.winfo_screenwidth(), window.winfo_screenheight()
 window.geometry("900x600+%d+%d" % ((w/2)-450, (h/2)-300)) # starting dims and x/y coords
-pNum = "-"
+pNum = "why"
 
-def handle_button_press():
+# handler to accept user's update from phone number text box
+def handle_pNum_update_press():
     pNum = phoneEntry.get()
+    outVal.configure(text=pNum)
+
+# currently debugs output into terminal
+def handle_button_press():
     print("button pressed. pNum val =", pNum)
     print("checkboxes values are noted as: %d, %d, %d, %d" % (discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get()))
-    outVal.configure(text=pNum)
 
 # image storage
 osasIMG = tk.PhotoImage(file="01.gif")
@@ -35,7 +39,7 @@ inNotifText = tk.Label(leftFrame, text="User Input(s):").pack(fill=tk.BOTH)
 # ----------------------- LEFT SIDE OF GUI -----------------------
 # phone entry frame
 phoneFrame = tk.Frame(leftFrame)
-phoneButton = tk.Button(phoneFrame, text="Submit", command=handle_button_press).pack(side='right')
+phoneButton = tk.Button(phoneFrame, text="Submit", command=handle_pNum_update_press).pack(side='right')
 phoneEntry = tk.Entry(phoneFrame, bd=3)
 phoneEntry.pack(side='left')
 phoneFrame.pack(expand=tk.TRUE)
@@ -55,13 +59,19 @@ dchChk.pack(anchor = 'w')
 dtChk.pack(anchor = 'w')
 fwChk.pack(anchor = 'w')
 checkFrame.pack(expand=tk.TRUE)
+
+# "Start" button
+startFrame = tk.Frame(leftFrame)
+startButton = tk.Button(startFrame, text="Start", command=handle_button_press).pack()
+startFrame.pack(expand=tk.TRUE)
 # ----------------------------------------------------------------
 
 
 # ----------------------- RIGHT SIDE OF GUI -----------------------
 # status basic output (repeat what is put in phone entry blank)
 statusFrame = tk.Frame(rightFrame, bg='grey')
-tk.Label(statusFrame, text="Value submitted:", bg='grey').pack()
+outLabel = tk.Label(statusFrame, text="Value submitted:", bg='grey')
+outLabel.pack()
 outVal = tk.Label(statusFrame, text=pNum, bg='grey')
 outVal.pack()
 statusFrame.pack(expand=tk.TRUE)
