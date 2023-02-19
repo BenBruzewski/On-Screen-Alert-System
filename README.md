@@ -1,17 +1,6 @@
-# On-Screen-Alert-System
-This is a Repo for Team 6's CPE496 Project: "On-Screen Alert System"
+# On-Screen-Alert-System GUI dev branch
 
-Developers for this project include:
+This branch is used to have version control for the GUI elements of OSAS.
 
-Ben Bruzewski
-Brendan Romanczuk
-Bryce Schaefer
-Robbie Cabra
-Ryan Colborn
-Shuchita Syema
-
-On-Screen Alert System has two components: One for Image Recognition / Software Detection Software, and another for Mobile Notifications via Text Messages
-
-Each component will have its own development branch and main branch. Once both parts are in a good place, the two main branches will be merged into "main" for combined testing later this semester
-
-The Text Messaging component uses Twilio's Text Message API to deliver the message from a Twilio-provided number.
+It will demonstrate the GUI proficiency of compiling an immutable window that will allow the user to interact with the program and start the main processing unit of OSAS itself.
+The main difference between this gui-dev branch and main is that this will contain only gui-related files and code whereas main will likely have the final executable.

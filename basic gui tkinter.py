@@ -14,7 +14,6 @@ def handle_button_press():
     print("button pressed. pNum val =", pNum)
     print("checkboxes values are noted as: %d, %d, %d, %d" % (discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get()))
     outVal.configure(text=pNum)
-    # window.quit()
 
 # image storage
 osasIMG = tk.PhotoImage(file="01.gif")
