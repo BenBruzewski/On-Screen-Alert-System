@@ -7,7 +7,7 @@ window.minsize(900, 600)
 window.maxsize(900, 600)
 w, h = window.winfo_screenwidth(), window.winfo_screenheight()
 window.geometry("900x600+%d+%d" % ((w/2)-450, (h/2)-300)) # starting dims and x/y coords
-pNum = "why"
+pNum = "-"
 
 # handler to accept user's update from phone number text box
 def handle_pNum_update_press():
