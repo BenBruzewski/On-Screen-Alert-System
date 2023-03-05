@@ -5,5 +5,7 @@
 discord_call_full=1
 discord_call_half=1
 discord_text=1
+dota_match=1
+lol_match=1
 windows_firewall=1
 stopsign=1

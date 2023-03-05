@@ -40,11 +40,20 @@ NOTE: This program has an accompanying config file which can be used to enable a
 """
 import pathlib
 import os
+import time
+
 import pyautogui  # take screenshots
 import cv2  # display images
 import numpy as np  # math work
 from time import process_time_ns  # needed for time estimate
 import msvcrt  # keyboard input and event handling
+import threading  # threading used for event cooldown timer handling
+
+
+def enable_alert():  # if an alert was found it needs to be disabled for 300 seconds. This is how we enable it after
+    global finalFileList  # do this so that the main script sees the change to this list
+    finalFileList.append(cooldownList[0])  # while globals can be risky these have very specific purposes that are safe
+    del cooldownList[0]  # delete the first item from the list since this is the oldest alert on CD
 
 
 # this function processes one target file at a time against our desktop screenshot and then displays an image if it hit
@@ -59,14 +68,35 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
         confidence = res[pt[1]][pt[0]]
         print('match with conf = ', confidence)  # show confidence to console (can remove if wanted)
+        print("filepath type:", type(filepath))
+        print("filepath = ", pathlib.Path(filepath))
+        print("finalFileList: ", finalFileList)
+        if finalFileList.__contains__(pathlib.Path(filepath)):  # this is b/c sometimes an alert is already cleared
+            finalFileList.remove(pathlib.Path(filepath))  # the type casting is very important, must be pathlib path!
+        # remove this filepath from the finalFileList temporarily (on cooldown)
+        global cooldownList
+        cooldownList.append(pathlib.Path(filepath))  # add any cooldown filepaths to a cooldown list for storage
+        global cooldownCount  # edit cooldownCount across entire script, so we can use enableAlert function
+        timer.insert(cooldownCount, threading.Timer(300.0, enable_alert))
+        # may need to set multiple timers, using a list
+        # set a 300-second timer then enable the alert again
+        timer[cooldownCount].start()  # list of timers but only start timing the current one here
+        cooldownCount = cooldownCount + 1  # increment once per item on CD
+        # starting the timer above , note that timer.cancel() can stop a timer if it hasn't gone off yet
         cv2.imshow(' ', img)  # display the image with our "confidence" rectangles on it
         counter = counter + 1
+        # add some way here to disable tracking for this particular alert until it's acknowledged by the user
+        # or until a timer ends with a reasonable reset amount (5 minutes?)
+        # can add timer and then after timer ends, call some kind of enabling function (enable_alert())
+        # enable_alert would have the alert as a parameter which would add it back to finalFileList for tracking again
+        # user could also re-enable tracking of an alert by coming back to their device and clicking a button to reset
     print('num of loop iterations: ', counter)
 
 
 print('Press g to begin scanning screen for alerts\nPress s to stop')
 
 exitLoop = 0  # this loop starts once the user has pressed g at least once
+cooldownCount = 0
 t1_start = process_time_ns()  # recording elapsed time so we know what to expect
 
 scriptPath = __file__  # get the file path for this program
@@ -83,6 +113,8 @@ fileList = os.listdir(pathHead)  # this holds all filepaths for files inside the
 config = open(pathConfig, "r")  # open the config file in reading more
 keeperList = []
 finalFileList = []
+cooldownList = []
+timer = []
 
 single = config.readline()  # get an initial line to begin the while loop. Make sure there are no blank lines
 
@@ -126,7 +158,6 @@ while 1:  # wait for user to press 'g' before we begin checking for alert matche
 
         print('entering program loop')
         while exitLoop == 0:  # while the exit value is still 0, keep looping (until they press 's')
-
             if msvcrt.kbhit():
                 pressedKey2 = msvcrt.getch()  # keep a variable on standby for key presses
                 if pressedKey2 == b's':  # exit here
@@ -145,10 +176,16 @@ while 1:  # wait for user to press 'g' before we begin checking for alert matche
 
             fileCounter = 0
             for f in finalFileList:  # for every item that made it to the final file list (keepers)
+                print("scanimage param:", finalFileList[fileCounter])
+                print("type param: ", type(finalFileList[fileCounter]))
                 scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
                 fileCounter = fileCounter + 1  # increment to scan the next image in the list
+            # items can be removed or added from this list to enable and disable alert tracking.
+            # use this list to set a timer or cooldown on alert triggers for each indiv alert?zzz
 
             cv2.waitKey(0)  # pause the program while the image is displayed
+            time.sleep(2)  # pause 2 seconds before continuing to search so that the user has time to close the alert
+            # note that this pause time may change with the demand of our alerts. For now 2 seconds is fine
     else:  # alt flow if wrong key is pressed
         print('please enter "s" or "g"')
         print('you pressed: ')
