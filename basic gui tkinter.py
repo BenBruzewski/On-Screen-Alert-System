@@ -21,13 +21,6 @@ runningWindow.geometry("400x400+%d+%d" % ((w/2)-200, (h/2)-300))
 # create the configparsing object
 confObj = ConfigParser()
 
-# example of reading values and modifying them
-# confObj.read("config.ini")
-# trackedImg = confObj["TRACKEDIMAGES"]
-# trackedImg["discord_call_half"] = "0"
-# with open('config.ini', 'w') as conf:
-#     confObj.write(conf)
-
 # handler to accept user's update from phone number text box
 def handle_pNum_update_press():
     pNum = phoneEntry.get()
@@ -60,6 +53,19 @@ def on_quit():
     print("Goodbye.")
     window.destroy()
 
+def validator(x):
+    # if they used a number
+    if x.isdigit():
+        return True
+    # if they backspaced
+    elif x == "":
+        return True
+    # anything else is no-go
+    else:
+        return False
+
+reg = window.register(validator)
+
 # this single line overwrites the control that would normally happen when the user hits the pop-up screen's "X" button
 runningWindow.protocol("WM_DELETE_WINDOW", on_closing)
 
@@ -86,6 +92,7 @@ inNotifText = tk.Label(leftFrame, text="User Input(s):").pack(fill=tk.BOTH)
 phoneFrame = tk.Frame(leftFrame)
 phoneButton = tk.Button(phoneFrame, text="Submit", command=handle_pNum_update_press).pack(side='right')
 phoneEntry = tk.Entry(phoneFrame, bd=3)
+phoneEntry.config(validate="key", validatecommand=(reg, '%P'))
 phoneEntry.pack(side='left')
 phoneFrame.pack(expand=tk.TRUE)
 
