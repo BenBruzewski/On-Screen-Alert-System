@@ -89,11 +89,13 @@ inNotifText = tk.Label(leftFrame, text="User Input(s):").pack(fill=tk.BOTH)
 # ----------------------- LEFT SIDE OF GUI -----------------------
 # ----------------------------------------------------------------
 # phone entry frame
-phoneFrame = tk.Frame(leftFrame)
-phoneButton = tk.Button(phoneFrame, text="Submit", command=handle_pNum_update_press).pack(side='right')
+phoneFrame = tk.Frame(leftFrame, bg='lightgrey')
+phoneLabel = tk.Label(phoneFrame, text="Please enter your phone number (only numbers):", bg='lightgrey').pack()
+phoneButton = tk.Button(phoneFrame, text="Submit", command=handle_pNum_update_press)
 phoneEntry = tk.Entry(phoneFrame, bd=3)
 phoneEntry.config(validate="key", validatecommand=(reg, '%P'))
-phoneEntry.pack(side='left')
+phoneEntry.pack(side='left', fill=tk.BOTH, expand=tk.TRUE)
+phoneButton.pack(side='right')
 phoneFrame.pack(expand=tk.TRUE)
 
 # checkboxes frame
