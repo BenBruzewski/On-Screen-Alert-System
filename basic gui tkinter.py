@@ -18,6 +18,7 @@ runningWindow.maxsize(400,400)
 runningWindow.title("OSAS is running...")
 runningWindow.configure(background="grey")
 runningWindow.geometry("400x400+%d+%d" % ((w/2)-200, (h/2)-300))
+runningWindow.withdraw()
 # create the configparsing object
 confObj = ConfigParser()
 
