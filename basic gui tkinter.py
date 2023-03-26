@@ -30,17 +30,37 @@ def handle_pNum_update_press():
 # currently debugs output into terminal
 def handle_button_press():
     runPhoneLabel.configure(text=outVal.cget("text"))
-    runCB2Label.configure(text="%d, %d, %d, %d, %d" % (discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), custWBox.get()))
+    boxVals = [discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(), stopBox.get()]
+    runCB2Label.configure(text="%d, %d, %d, %d, %d, %d, %d" % (discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(), stopBox.get()))
     # modify the config file
-    confObj.read("config.ini")
-    trackedImg = confObj["TRACKEDIMAGES"]
-    trackedImg["discord_call_full"] = "%d" % discCallBox.get()
-    trackedImg["discord_call_half"] = "%d" % discCallHalfBox.get()
-    trackedImg["discord_text"] = "%d" % discTextBox.get()
-    trackedImg["windows_firewall"] = "%d" % fireWBox.get()
-    trackedImg["custom_notif"] = "%d" % custWBox.get()
-    with open('config.ini', 'w') as conf:
-        confObj.write(conf)
+    msg = ""
+    with open("config.txt", "r") as f:
+        msg = f.readlines()
+    newMsg = ""
+    count = 0
+    for x in msg:
+        if x[0] != "#":
+            if x[0] != "*":
+                val = 0
+                line = ""
+                for i in x:
+                    if i == "=":
+                        val = 1
+                        line += "="
+                    if val == 1:
+                        i = str(boxVals[count])
+                        count+=1
+                        line += i
+                        break
+                    line += i
+                newMsg += line + "\n"
+            else:
+                newMsg += x
+        else:
+            newMsg += x
+    with open("config.txt", "w") as f:
+        f.write(newMsg)
+
     window.withdraw()
     runningWindow.deiconify()
 
@@ -105,17 +125,26 @@ discCallBox = tk.IntVar()
 discCallHalfBox = tk.IntVar()
 discTextBox = tk.IntVar()
 fireWBox = tk.IntVar()
-custWBox = tk.IntVar()
+#custWBox = tk.IntVar()
+dotaBox = tk.IntVar()
+lolBox = tk.IntVar()
+stopBox = tk.IntVar()
 dcChk = tk.Checkbutton(checkFrame, text="Discord Call", var=discCallBox, bg='lightgrey')
 dchChk = tk.Checkbutton(checkFrame, text="Discord Call (Half Size)", var=discCallHalfBox, bg='lightgrey')
 dtChk = tk.Checkbutton(checkFrame, text="Discord Text", var=discTextBox, bg='lightgrey')
 fwChk = tk.Checkbutton(checkFrame, text="Firewall Notification", var=fireWBox, bg='lightgrey')
-custChk = tk.Checkbutton(checkFrame, text="Custom Notification(s)", var=custWBox, bg='lightgrey')
+dotaChk = tk.Checkbutton(checkFrame, text="Dota Match Notif.", var=dotaBox, bg='lightgrey')
+lolChk = tk.Checkbutton(checkFrame, text="League of Legends Notif", var=lolBox, bg='lightgrey')
+stopChk = tk.Checkbutton(checkFrame, text="Stop Sign", var=stopBox, bg='lightgrey')
+#custChk = tk.Checkbutton(checkFrame, text="Custom Notification(s)", var=custWBox, bg='lightgrey')
 dcChk.pack(anchor='w')
 dchChk.pack(anchor = 'w')
 dtChk.pack(anchor = 'w')
 fwChk.pack(anchor = 'w')
-custChk.pack(anchor = 'w')
+dotaChk.pack(anchor = 'w')
+lolChk.pack(anchor = 'w')
+stopChk.pack(anchor = 'w')
+#custChk.pack(anchor = 'w')
 checkFrame.pack(expand=tk.TRUE)
 
 # "Start" and "Close" button
