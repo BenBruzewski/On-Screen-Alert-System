@@ -8,5 +8,5 @@
 #Above two variables should be written to the empty lines above them
 #
 #.env format
-#TWILIO_ACCOUNT_SID = 'AC58f7afd20c205f1841564f4cfc2d198c'
-#TWILIO_AUTH_TOKEN = 'cb70ca6803738aa141461dcfbd0712f7'
+#TWILIO_ACCOUNT_SID = {SID goes here}
+#TWILIO_AUTH_TOKEN = {AUTH goes here}
