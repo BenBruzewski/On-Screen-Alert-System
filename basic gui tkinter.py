@@ -25,10 +25,15 @@ confObj = ConfigParser()
 # handler to accept user's update from phone number text box
 def handle_pNum_update_press():
     pNum = phoneEntry.get()
-    outVal.configure(text=pNum)
+    if(len(pNum) != 10):
+        outVal.configure(text="Invalid Phone #. Please use 10 digits")
+    else:
+        pNum = pNum[:3] + "-" + pNum[3:6] + "-" + pNum[6:]
+        outVal.configure(text=pNum)
 
 # currently debugs output into terminal
 def handle_button_press():
+    # temporary output showing what is set up during the "running" portion of the GUI
     runPhoneLabel.configure(text=outVal.cget("text"))
     boxVals = [discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(), stopBox.get()]
     runCB2Label.configure(text="%d, %d, %d, %d, %d, %d, %d" % (discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(), stopBox.get()))
@@ -74,12 +79,14 @@ def on_quit():
     print("Goodbye.")
     window.destroy()
 
-def validator(x):
+def validator(x, d):
+    # if the 10 char limit has been reached, and not trying to backspace, dont allow
+    if len(phoneEntry.get()) == 10:
+        if d == '0':
+            return True
+        return False
     # if they used a number
-    if x.isdigit():
-        return True
-    # if they backspaced
-    elif x == "":
+    elif x.isdigit():
         return True
     # anything else is no-go
     else:
@@ -87,8 +94,9 @@ def validator(x):
 
 reg = window.register(validator)
 
-# this single line overwrites the control that would normally happen when the user hits the pop-up screen's "X" button
+# these couple lines overwrite the control that would normally happen when the user hits the pop-up screen's "X" button
 runningWindow.protocol("WM_DELETE_WINDOW", on_closing)
+window.protocol("WM_DELETE_WINDOW", on_quit)
 
 # image storage
 osasIMG = tk.PhotoImage(file="01.gif")
@@ -103,7 +111,7 @@ imgFrame.pack(fill=tk.BOTH)
 CF = tk.Frame(window)
 leftFrame = tk.Frame(CF, bg='lightgrey')
 rightFrame = tk.Frame(CF, bg='grey')
-outNotifText = tk.Label(rightFrame, text="Program Status:").pack(fill=tk.BOTH)
+outNotifText = tk.Label(rightFrame, text="Program Status:", width=37).pack(fill=tk.BOTH)
 inNotifText = tk.Label(leftFrame, text="User Input(s):").pack(fill=tk.BOTH)
 
 # ----------------------------------------------------------------
@@ -111,10 +119,10 @@ inNotifText = tk.Label(leftFrame, text="User Input(s):").pack(fill=tk.BOTH)
 # ----------------------------------------------------------------
 # phone entry frame
 phoneFrame = tk.Frame(leftFrame, bg='lightgrey')
-phoneLabel = tk.Label(phoneFrame, text="Please enter your phone number (only numbers):", bg='lightgrey').pack()
+phoneLabel = tk.Label(phoneFrame, text="Please enter your 10-digit phone number:", bg='lightgrey').pack()
 phoneButton = tk.Button(phoneFrame, text="Submit", command=handle_pNum_update_press)
 phoneEntry = tk.Entry(phoneFrame, bd=3)
-phoneEntry.config(validate="key", validatecommand=(reg, '%P'))
+phoneEntry.config(validate="key", validatecommand=(reg, '%S', '%d'))
 phoneEntry.pack(side='left', fill=tk.BOTH, expand=tk.TRUE)
 phoneButton.pack(side='right')
 phoneFrame.pack(expand=tk.TRUE)
