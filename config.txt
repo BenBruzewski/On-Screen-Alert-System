@@ -9,3 +9,11 @@ dota_match=1
 lol_match=1
 windows_firewall=1
 stopsign=1
+steam=1
+csgo_match=1
+mail=1
+*cmd.exe
+*IDK.exe
+*chrome.exe
+*steamwebhelper.exe
+*Taskmgr.exe

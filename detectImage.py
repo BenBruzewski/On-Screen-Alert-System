@@ -16,11 +16,20 @@ description:
 
 date: 2/8/23
 
-Required libraries to import: pyautogui, cv2, numpy, time, msvcrt, os, pathlib
+Required libraries to import: pyautogui, cv2, numpy, time, msvcrt, os, pathlib, threading
 
 You may need to use the terminal and pip to install these libraries. Try these steps:
     1) pip install pip (only do once)
     2) pip install *library name here* (once per library)
+    * Libraries that require pip: cv2 (library is opencv-python), and pyautogui (library is pyautogui)
+    * You will also need Pillow, it's a dependency for opencv
+    https://pypi.org/project/opencv-python/
+    https://pypi.org/project/PyAutoGUI/
+
+    "pip install opencv-python"
+    "pip install pyautogui"
+    "pip install Pillow"
+    "pip install numpy"
 
 NOTE: I have made the filepath system dynamic. Logic and requirements as follows:
     1) Your script (.py file) may be in any folder you choose!
@@ -37,7 +46,30 @@ NOTE: This program has an accompanying config file which can be used to enable a
     PLEASE ensure that any config items added to the file match the name of their respective target image in the target
         folder.
 
+NOTES FOR BRYCE:
+    1) current state of script starts looping the moment it's opened, keep this in mind
+    2) alerts are removed once found for the next 300 seconds
+    3) if an item wants to add to the tracking list we must:
+        a) add its image to the "targets" folder
+        b) add its filename to config.cfg as "filename=1" where 1 is active and 0 is inactive
+        c) note that the cooldowns do not change these config file values mid-execution
+    4) for cyber reasons, we should delete the screenshot of the desktop from our folder once finished
+    #  if you don't have the filepath stored locally you can use this to find the path THEN delete it:
+    scriptPath = __file__  # get the file path for this program using a built-in command
+    path = pathlib.Path(scriptPath)  # converting the file path to a pathlib type for methods
+    pathScreenshot = path.parent  # get the filepath without the script at the end of it (parent folder)
+    pathScreenshot = pathScreenshot.joinpath(pathScreenshot,
+                                           'screenshot1.png')  # append the screenshot name to the path
+    pathScreenshot = pathlib.PureWindowsPath(
+    pathScreenshot).as_posix()  # convert the screenshot filepath to Windows-style for the os.remove command.
+    #  by here we should have the filepath to the screenshot assuming it's in the same folder as the scripts
+    os.remove(pathScreenshot)  # delete the screenshot we took
+
+    5) feel free to delete all the print statements from this code if you don't need them, they're here for clarity
+
 """
+from ast import If  # for WindowsProcess.py
+
 import pathlib
 import os
 import time
@@ -46,35 +78,72 @@ import pyautogui  # take screenshots
 import cv2  # display images
 import numpy as np  # math work
 from time import process_time_ns  # needed for time estimate
-import msvcrt  # keyboard input and event handling
 import threading  # threading used for event cooldown timer handling
+
+# creating variables for lists of processes
+ulist = []  # create variable for user list of values to check
+initial_count = []  # variable for the initial list of processes to check
+current_count = []  # variable for the current list of processes to check
+process_time = 5  # variable to set the time between process checks in seconds
+
+
+# ^^^ Global Variables for the WindowsProcess.py section of the code (see Github for more)
+
+
+# Function to create list of processes running on host machine
+def process_read():
+    process_count = {}  # create variable for processes to be counted
+    process_current = os.popen('wmic process get description').read()  # read list of current processes
+    process_list = process_current.strip().split('\n')[1:]  # remove header line and split by newline
+    process_set = set(process_list)  # convert to set to remove duplicates
+    # loop to find occurrences of each process
+    for process in process_set:  # iterate through 'process set' array
+        count = process_list.count(process)  # count the number of processes
+        process_count[process] = count  # create dictionary of processes
+
+    process_output = [f"{process} ({count})".strip() for process, count in
+                      process_count.items()]  # put the contents of the previous loop together
+    return process_output  # return the list of processes dictionary
+
+
+# Compare the processes in the config file to the processes recorded running on the machine
+def count_processes(ulist, process_output):
+    entry_counts = {}  # create variable for number of entries
+    for process in ulist:
+        count = 0
+        for output in process_output:
+            if process.lower() in output.lower():
+                count += int(output.split("(")[1].split(")")[0])
+        entry_counts[process] = count
+    return entry_counts
 
 
 def enable_alert():  # if an alert was found it needs to be disabled for 300 seconds. This is how we enable it after
     global finalFileList  # do this so that the main script sees the change to this list
     finalFileList.append(cooldownList[0])  # while globals can be risky these have very specific purposes that are safe
     del cooldownList[0]  # delete the first item from the list since this is the oldest alert on CD
+    # this will continue to work fine unless we design a secondary way to place or remove alerts from cooldown (not rn)
 
 
 # this function processes one target file at a time against our desktop screenshot and then displays an image if it hit
 def scanimage(filepath):  # takes a windows-style filepath to a target image as input and searches for it in img_gray
     counter = 0  # start a counter for use in the following loop:
-    target_img = cv2.imread(filepath, 0)  # read the target img
-    w, h = target_img.shape[::-1]  # get info on target img
+    target_img = cv2.imread(filepath, 0)  # read the target img using the openCV read command
+    w, h = target_img.shape[::-1]  # get info on target img and convert to a width and height value
     res = cv2.matchTemplate(img_gray, target_img, cv2.TM_CCOEFF_NORMED)  # check for matches of target on
-    threshold = 0.8
+    # matchTemplate returns a set of confidence values based on image size
+    threshold = 0.8  # threshold for res values that we care about (if 80% + confident, it's a hit right now).
     loc = np.where(res >= threshold)  # this will only care about hits over our threshold
     for pt in zip(*loc[::-1]):  # start the detection loop which paints rectangles on our matches
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
-        confidence = res[pt[1]][pt[0]]
+        confidence = res[pt[1]][pt[0]]  # res holds confidence levels across the image
+        print('\n\n*****************************************************')
         print('match with conf = ', confidence)  # show confidence to console (can remove if wanted)
-        print("filepath type:", type(filepath))
-        print("filepath = ", pathlib.Path(filepath))
-        print("finalFileList: ", finalFileList)
+        print("filepath of image match = ", pathlib.Path(filepath))
         if finalFileList.__contains__(pathlib.Path(filepath)):  # this is b/c sometimes an alert is already cleared
             finalFileList.remove(pathlib.Path(filepath))  # the type casting is very important, must be pathlib path!
         # remove this filepath from the finalFileList temporarily (on cooldown)
-        global cooldownList
+        global cooldownList  # declare global before first use, must do in Python for global varbs
         cooldownList.append(pathlib.Path(filepath))  # add any cooldown filepaths to a cooldown list for storage
         global cooldownCount  # edit cooldownCount across entire script, so we can use enableAlert function
         timer.insert(cooldownCount, threading.Timer(300.0, enable_alert))
@@ -83,27 +152,22 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         timer[cooldownCount].start()  # list of timers but only start timing the current one here
         cooldownCount = cooldownCount + 1  # increment once per item on CD
         # starting the timer above , note that timer.cancel() can stop a timer if it hasn't gone off yet
-        cv2.imshow(' ', img)  # display the image with our "confidence" rectangles on it
-        counter = counter + 1
-        # add some way here to disable tracking for this particular alert until it's acknowledged by the user
-        # or until a timer ends with a reasonable reset amount (5 minutes?)
-        # can add timer and then after timer ends, call some kind of enabling function (enable_alert())
-        # enable_alert would have the alert as a parameter which would add it back to finalFileList for tracking again
-        # user could also re-enable tracking of an alert by coming back to their device and clicking a button to reset
-    print('num of loop iterations: ', counter)
+        # cv2.imshow(' ', img)  # display the image with our "confidence" rectangles on it
+        print("filelist after cooldown: ", finalFileList)
+        print('*****************************************************\n\n')
+        counter = counter + 1  # this counter just shows how many times we've looped through this block (once per match)
+    # print('num of loop iterations: ', counter)
 
-
-print('Press g to begin scanning screen for alerts\nPress s to stop')
 
 exitLoop = 0  # this loop starts once the user has pressed g at least once
-cooldownCount = 0
+cooldownCount = 0  # how many items are on cooldown right now?
 t1_start = process_time_ns()  # recording elapsed time so we know what to expect
 
 scriptPath = __file__  # get the file path for this program
 path = pathlib.Path(scriptPath)  # converting the file path to a pathlib type for methods
 pathHead = path.parent  # get the filepath without the script at the end of it (parent folder)
 pathScreenshot = pathHead  # get a spare copy to use for our desktop screenshot filepath later
-pathConfig = pathHead
+pathConfig = pathHead  # get another spare copy for our config filepath later
 pathConfig = pathScreenshot.joinpath(pathScreenshot, 'config.txt')  # append the parent path with config file
 pathScreenshot = pathScreenshot.joinpath(pathScreenshot, 'screenshot1.png')  # append the screenshot name to the path
 pathScreenshot = pathlib.PureWindowsPath(pathScreenshot).as_posix()  # convert the screenshot filepath to Windows-style
@@ -111,24 +175,26 @@ pathHead = pathHead.joinpath(pathHead, 'targets')  # append "targets" to the end
 fileList = os.listdir(pathHead)  # this holds all filepaths for files inside the "target" folder
 
 config = open(pathConfig, "r")  # open the config file in reading more
-keeperList = []
-finalFileList = []
-cooldownList = []
-timer = []
+keeperList = []  # list of pictures we're keeping based config file, feeds into finalFileList
+finalFileList = []  # final list of files we're tracking from target folder and config file
+cooldownList = []  # list of filenames that are on cooldown (no track b/c recent hit)
+timer = []  # a list of timers which are 300 seconds and call enable_alert when complete. 1 timer per alert on cooldown
 
 single = config.readline()  # get an initial line to begin the while loop. Make sure there are no blank lines
 
+# NOTE TO DISCUSS WITH RYAN: current config file cannot have spaces... could add something to manipulate them
+#   are spaces needed for his process tracking?
 while single != '':  # while we're not at the end of the file:
     single = single.strip()  # remove \n from the end of each line for better analysis. This also removes whitespaces
-    if not single.__contains__("#"):  # if the line has a # it's a comment line, disregard this line. Else? keep it.
+    if not single.__contains__("#") and not single.__contains__("*"):
+        #  If the line has a # it's a comment, and if it has a * it's for the Windows Process tracker (4 lines down)
         divided = single.split("=")  # dividing at the '=', so we can check the value after the '=' (0 or 1?)
         if divided[1] == '1':  # if the second part is 1, we want to track this alert
             keeperList.append(divided[0])  # add any items with a 1 to the keeper list (targets to track)
+    if single.startswith('*'):  # check for process character (*)
+        ulist.append(single.lstrip('*').strip())  # format output and add to ulist
     single = config.readline()  # read a line into the file for processing..., also last line of while loop
 config.close()  # close out of the config file since it's good practice to do this once finished.
-
-# print("fileList before loop: ", fileList)
-# print("keeperList = ", keeperList)
 
 fileCounter = 0  # using this in the following loop for indexing
 for f in fileList:  # for the number of items in fileList
@@ -142,51 +208,39 @@ for f in fileList:  # for the number of items in fileList
 
 # print("final file list: ", finalFileList)  # this list is all targets we will actually track during program loop
 
+initial_count = count_processes(ulist, process_read())  # store the initial count of running processes
+print(initial_count)
+reset_count = 0  # end of WindowsProcess.py setup before "main" / infinite loop
+
 while 1:  # wait for user to press 'g' before we begin checking for alert matches
+    print('entering program loop')
+    #  Start of WindowsProcess.py infinite loop segment
+    current_count = count_processes(ulist, process_read())  # store the current count of running processes
+    if initial_count == current_count:  # check for differences
+        print(current_count)  # print current processes
+    elif reset_count == 0:  # check if reset is complete
+        print(current_count)  # print current processes
+        print('output to API')  # "output to API"
+        reset_count = 300  # Set Reset Counter to x * process_time
+    else:
+        print(current_count)  # print current processes
+        reset_count = reset_count - 1  # iterate counter down by 1
+    #  time.sleep(process_time)
+    #  End of WindowsProcess.py infinite loop segment
+    #  Start of DetectImage.py infinite loop segment
+    screenshot1 = pyautogui.screenshot()  # take a screenshot of current screen an save as 'screenshot1.png')
+    screenshot1.save(pathScreenshot)
+    img = cv2.imread(pathScreenshot)
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # cv2.imshow("Screenshot", img)
+    fileCounter = 0
+    for f in finalFileList:  # for every item that made it to the final file list (keepers)
+        print("scanimage param:", finalFileList[fileCounter])
+        scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
+        fileCounter = fileCounter + 1  # increment to scan the next image in the list
+        # items can be removed or added from this list to enable and disable alert tracking.
+        # cv2.waitKey(0)  # pause the program while the image is displayed
+    os.remove(pathScreenshot)  # delete the screenshot we took
+    time.sleep(1)  # pause for a moment before checking a new screenshot for resource conservation purposes.
 
-    pressedKey = msvcrt.getch()  # keep a variable on standby for key presses
-
-    if pressedKey == b's':  # if the user wants to stop before entering the loop it'll go here
-
-        print('exiting program')
-        t1_stop = process_time_ns()
-        print("Elapsed time during the whole program in nanoseconds:", t1_stop - t1_start)
-        print("Elapsed time during the whole program in seconds:", (t1_stop - t1_start) / 1000000000)
-        quit()
-
-    elif pressedKey == b'g':  # if the user wants to enter the program we will go here
-
-        print('entering program loop')
-        while exitLoop == 0:  # while the exit value is still 0, keep looping (until they press 's')
-            if msvcrt.kbhit():
-                pressedKey2 = msvcrt.getch()  # keep a variable on standby for key presses
-                if pressedKey2 == b's':  # exit here
-                    print('exiting program')
-                    t1_stop = process_time_ns()
-                    print("Elapsed time during the whole program in nanoseconds:", t1_stop - t1_start)
-                    print("Elapsed time during the whole program in seconds:", (t1_stop - t1_start) / 1000000000)
-                    quit()  # close out on 's' key
-
-            screenshot1 = pyautogui.screenshot()  # take a screenshot of current screen an save as 'screenshot1.png')
-            screenshot1.save(pathScreenshot)
-
-            img = cv2.imread(pathScreenshot)
-            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            # cv2.imshow("Screenshot", img)
-
-            fileCounter = 0
-            for f in finalFileList:  # for every item that made it to the final file list (keepers)
-                print("scanimage param:", finalFileList[fileCounter])
-                print("type param: ", type(finalFileList[fileCounter]))
-                scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
-                fileCounter = fileCounter + 1  # increment to scan the next image in the list
-            # items can be removed or added from this list to enable and disable alert tracking.
-            # use this list to set a timer or cooldown on alert triggers for each indiv alert?zzz
-
-            cv2.waitKey(0)  # pause the program while the image is displayed
-            time.sleep(2)  # pause 2 seconds before continuing to search so that the user has time to close the alert
-            # note that this pause time may change with the demand of our alerts. For now 2 seconds is fine
-    else:  # alt flow if wrong key is pressed
-        print('please enter "s" or "g"')
-        print('you pressed: ')
-        print(pressedKey)
+    # can remove if desired or add more delay, doesn't matter but note that currently 1 second per sweep of image
