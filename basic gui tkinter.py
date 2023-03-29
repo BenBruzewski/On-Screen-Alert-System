@@ -18,20 +18,20 @@ import threading  # threading used for event cooldown timer handling
 # create the main window and its dimensions
 window = tk.Tk()
 window.title("On Screen Alert System")
-window.configure(background="white") # this background can accept hexRGB values (eg. #6FAFE7)
+window.configure(background="white")  # this background can accept hexRGB values (eg. #6FAFE7)
 window.minsize(900, 600)
 window.maxsize(900, 600)
 w, h = window.winfo_screenwidth(), window.winfo_screenheight()
-window.geometry("900x600+%d+%d" % ((w/2)-450, (h/2)-300)) # starting dims and x/y coords
+window.geometry("900x600+%d+%d" % ((w / 2) - 450, (h / 2) - 300))  # starting dims and x/y coords
 pNum = "-"
 # create the pop-up window and its dimensions
 global runningWindow
 runningWindow = tk.Toplevel()
-runningWindow.minsize(400,400)
-runningWindow.maxsize(400,400)
+runningWindow.minsize(400, 400)
+runningWindow.maxsize(400, 400)
 runningWindow.title("OSAS is running...")
 runningWindow.configure(background="grey")
-runningWindow.geometry("400x400+%d+%d" % ((w/2)-200, (h/2)-300))
+runningWindow.geometry("400x400+%d+%d" % ((w / 2) - 200, (h / 2) - 300))
 runningWindow.withdraw()
 # create the configparsing object
 confObj = ConfigParser()
@@ -55,6 +55,7 @@ finalFileList = []  # final list of files we're tracking from target folder and 
 cooldownList = []  # list of filenames that are on cooldown (no track b/c recent hit)
 timer = []  # a list of timers which are 300 seconds and call enable_alert when complete. 1 timer per alert on cooldown
 
+
 # ^^^ Global Variables for the WindowsProcess.py section of the code (see Github for more)
 
 
@@ -76,6 +77,7 @@ def window_capture():
     img = np.frombuffer(im, dtype=np.uint8).reshape((h, w, 4))
 
     cv2.imwrite("screenshot1.png", img)
+
 
 # Function to create list of processes running on host machine
 def process_read():
@@ -118,7 +120,7 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
     w, h = target_img.shape[::-1]  # get info on target img and convert to a width and height value
     res = cv2.matchTemplate(img_gray, target_img, cv2.TM_CCOEFF_NORMED)  # check for matches of target on
     # matchTemplate returns a set of confidence values based on image size
-    threshold = 0.75  # threshold for res values that we care about (if 80% + confident, it's a hit right now).
+    threshold = 0.65  # threshold for res values that we care about (if 80% + confident, it's a hit right now).
     loc = np.where(res >= threshold)  # this will only care about hits over our threshold
     for pt in zip(*loc[::-1]):  # start the detection loop which paints rectangles on our matches
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
@@ -143,21 +145,26 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         print('*****************************************************\n\n')
         break
 
+
 # handler to accept user's update from phone number text box
 def handle_pNum_update_press():
     pNum = phoneEntry.get()
-    if(len(pNum) != 10):
+    if (len(pNum) != 10):
         outVal.configure(text="Invalid Phone #. Please use 10 digits")
     else:
         pNum = pNum[:3] + "-" + pNum[3:6] + "-" + pNum[6:]
         outVal.configure(text=pNum)
 
+
 # currently debugs output into terminal
 def handle_button_press():
     # temporary output showing what is set up during the "running" portion of the GUI
     runPhoneLabel.configure(text=outVal.cget("text"))
-    boxVals = [discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(), stopBox.get()]
-    runCB2Label.configure(text="%d, %d, %d, %d, %d, %d, %d" % (boxVals[0], boxVals[1], boxVals[2], boxVals[3], boxVals[4], boxVals[5], boxVals[6]))
+    boxVals = [discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(),
+               stopBox.get(), steamBox.get(), csgoBox.get(), mailBox.get()]
+    runCB2Label.configure(text="%d, %d, %d, %d, %d, %d, %d, %d, %d, %d" % (
+        boxVals[0], boxVals[1], boxVals[2], boxVals[3], boxVals[4], boxVals[5], boxVals[6], boxVals[7], boxVals[8],
+        boxVals[9]))
     # modify the config file
     msg = ""
     with open("config.txt", "r") as f:
@@ -175,7 +182,7 @@ def handle_button_press():
                         line += "="
                     if val == 1:
                         i = str(boxVals[count])
-                        count+=1
+                        count += 1
                         line += i
                         break
                     line += i
@@ -212,8 +219,9 @@ def handle_button_press():
         g = f.split('.')  # split at the filetype '.' to keep only the file's name.
 
         if g[0] in keeperList:  # if file in targets was found in the keeperList (items we've marked in config.txt)...
-            h = pathlib.Path(f).joinpath(pathHead, f)  # ex. join directory path with stopsign.png for full path to image
-            #h = pathlib.PureWindowsPath(h.as_posix())  # changing slashes for later use with windows libraries   
+            h = pathlib.Path(f).joinpath(pathHead,
+                                         f)  # ex. join directory path with stopsign.png for full path to image
+            # h = pathlib.PureWindowsPath(h.as_posix())  # changing slashes for later use with windows libraries
             h = pathlib.Path(str(h).capitalize())
             #  The pathlib library works with Linux-style paths, but we need windows-style paths for scanimage()
             finalFileList.append(h)  # add all of our final filepaths to a list called finalFileList
@@ -224,7 +232,7 @@ def handle_button_press():
     current_count = []  # variable for the current list of processes to check
     print(initial_count)
     imageRec(0, initial_count, current_count)
-    
+
 
 def imageRec(r, i, c):
     reset_count = r
@@ -255,16 +263,17 @@ def imageRec(r, i, c):
     # cv2.imshow("Screenshot", img)
     fileCounter = 0
     for f in finalFileList:  # for every item that made it to the final file list (keepers)
-        print("scanimage param:", finalFileList[fileCounter])
+        # print("scanimage param:", finalFileList[fileCounter])
         scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
         fileCounter = fileCounter + 1  # increment to scan the next image in the list
         # items can be removed or added from this list to enable and disable alert tracking.
         # cv2.waitKey(0)  # pause the program while the image is displayed
     os.remove(pathScreenshot)  # delete the screenshot we took
     afterID = window.after(1000, imageRec, reset_count, initial_count, current_count)
-    #time.sleep(1)  # pause for a moment before checking a new screenshot for resource conservation purposes.
+    # time.sleep(1)  # pause for a moment before checking a new screenshot for resource conservation purposes.
 
     # can remove if desired or add more delay, doesn't matter but note that currently 1 second per sweep of image
+
 
 # function that runs whether the user presses the "X" in the top right or if they hit the "Cancel" button
 def on_closing():
@@ -279,9 +288,11 @@ def on_closing():
     runningWindow.withdraw()
     window.deiconify()
 
+
 def on_quit():
     print("Goodbye.")
     window.destroy()
+
 
 def validator(x, d):
     # if the 10 char limit has been reached, and not trying to backspace, dont allow
@@ -296,6 +307,7 @@ def validator(x, d):
     else:
         return False
 
+
 reg = window.register(validator)
 
 # these couple lines overwrite the control that would normally happen when the user hits the pop-up screen's "X" button
@@ -307,7 +319,8 @@ osasIMG = tk.PhotoImage(file="01.gif")
 
 # messing with Frames
 # frame used for logo
-imgFrame = tk.Frame(window, width=628, height=207, bg='lightgrey') # w/h is catered towards image provided with x and y + 5 each. currently 623x202
+imgFrame = tk.Frame(window, width=628, height=207,
+                    bg='lightgrey')  # w/h is catered towards image provided with x and y + 5 each. currently 623x202
 tk.Label(imgFrame, image=osasIMG, bg='white', relief=tk.RAISED, bd=2).pack()
 imgFrame.pack(fill=tk.BOTH)
 
@@ -337,10 +350,13 @@ discCallBox = tk.IntVar()
 discCallHalfBox = tk.IntVar()
 discTextBox = tk.IntVar()
 fireWBox = tk.IntVar()
-#custWBox = tk.IntVar()
+# custWBox = tk.IntVar()
 dotaBox = tk.IntVar()
 lolBox = tk.IntVar()
 stopBox = tk.IntVar()
+steamBox = tk.IntVar()
+csgoBox = tk.IntVar()
+mailBox = tk.IntVar()
 dcChk = tk.Checkbutton(checkFrame, text="Discord Call", var=discCallBox, bg='lightgrey')
 dchChk = tk.Checkbutton(checkFrame, text="Discord Call (Half Size)", var=discCallHalfBox, bg='lightgrey')
 dtChk = tk.Checkbutton(checkFrame, text="Discord Text", var=discTextBox, bg='lightgrey')
@@ -348,15 +364,21 @@ fwChk = tk.Checkbutton(checkFrame, text="Firewall Notification", var=fireWBox, b
 dotaChk = tk.Checkbutton(checkFrame, text="Dota Match Notif.", var=dotaBox, bg='lightgrey')
 lolChk = tk.Checkbutton(checkFrame, text="League of Legends Notif", var=lolBox, bg='lightgrey')
 stopChk = tk.Checkbutton(checkFrame, text="Stop Sign", var=stopBox, bg='lightgrey')
-#custChk = tk.Checkbutton(checkFrame, text="Custom Notification(s)", var=custWBox, bg='lightgrey')
+steamChk = tk.Checkbutton(checkFrame, text="Steam Download Finished", var=steamBox, bg='lightgrey')
+csgoChk = tk.Checkbutton(checkFrame, text="CS:GO Match Notif.", var=csgoBox, bg='lightgrey')
+mailChk = tk.Checkbutton(checkFrame, text="Windows Mail Notif.", var=mailBox, bg='lightgrey')
+# custChk = tk.Checkbutton(checkFrame, text="Custom Notification(s)", var=custWBox, bg='lightgrey')
 dcChk.pack(anchor='w')
-dchChk.pack(anchor = 'w')
-dtChk.pack(anchor = 'w')
-fwChk.pack(anchor = 'w')
-dotaChk.pack(anchor = 'w')
-lolChk.pack(anchor = 'w')
-stopChk.pack(anchor = 'w')
-#custChk.pack(anchor = 'w')
+dchChk.pack(anchor='w')
+dtChk.pack(anchor='w')
+fwChk.pack(anchor='w')
+dotaChk.pack(anchor='w')
+lolChk.pack(anchor='w')
+stopChk.pack(anchor='w')
+steamChk.pack(anchor='w')
+csgoChk.pack(anchor='w')
+mailChk.pack(anchor='w')
+# custChk.pack(anchor = 'w')
 checkFrame.pack(expand=tk.TRUE)
 
 # "Start" and "Close" button
