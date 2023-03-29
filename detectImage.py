@@ -16,7 +16,7 @@ description:
 
 date: 2/8/23
 
-Required libraries to import: pyautogui, cv2, numpy, time, msvcrt, os, pathlib, threading
+Required libraries to import:  cv2, numpy, time, msvcrt, os, pathlib, threading
 
 You may need to use the terminal and pip to install these libraries. Try these steps:
     1) pip install pip (only do once)
@@ -78,7 +78,12 @@ import pyautogui  # take screenshots
 import cv2  # display images
 import numpy as np  # math work
 from time import process_time_ns  # needed for time estimate
-import threading  # threading used for event cooldown timer handling
+import threading  # threading used for event cooldown timer
+
+import win32gui  # these 4 libraries replace the functionality of pyautogui
+import win32ui  # this is because of a current bug with pyautogui and tkinter
+import win32api  # basically, the tkinter screen size was getting overwritten by pyautogui
+import win32con  # these can also take a screenshot like pyautogui did
 
 # creating variables for lists of processes
 ulist = []  # create variable for user list of values to check
@@ -88,6 +93,24 @@ process_time = 5  # variable to set the time between process checks in seconds
 
 
 # ^^^ Global Variables for the WindowsProcess.py section of the code (see Github for more)
+
+def window_capture():
+    hwnd = 0
+    hwndDC = win32gui.GetWindowDC(hwnd)
+    mfcDC = win32ui.CreateDCFromHandle(hwndDC)
+    saveDC = mfcDC.CreateCompatibleDC()
+    saveBitMap = win32ui.CreateBitmap()
+
+    MoniterDev = win32api.EnumDisplayMonitors(None, None)
+    w = MoniterDev[0][2][2]
+    h = MoniterDev[0][2][3]
+
+    saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
+    saveDC.SelectObject(saveBitMap)
+    saveDC.BitBlt((0, 0), (w, h), mfcDC, (0, 0), win32con.SRCCOPY)
+    im = saveBitMap.GetBitmapBits(True)  # Tried False also
+    img = np.frombuffer(im, dtype=np.uint8).reshape((h, w, 4))
+    cv2.imwrite("screenshot1.png", img)
 
 
 # Function to create list of processes running on host machine
@@ -155,13 +178,11 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         # cv2.imshow(' ', img)  # display the image with our "confidence" rectangles on it
         print("filelist after cooldown: ", finalFileList)
         print('*****************************************************\n\n')
-        counter = counter + 1  # this counter just shows how many times we've looped through this block (once per match)
-    # print('num of loop iterations: ', counter)
+        break
 
 
 exitLoop = 0  # this loop starts once the user has pressed g at least once
 cooldownCount = 0  # how many items are on cooldown right now?
-t1_start = process_time_ns()  # recording elapsed time so we know what to expect
 
 scriptPath = __file__  # get the file path for this program
 path = pathlib.Path(scriptPath)  # converting the file path to a pathlib type for methods
@@ -202,7 +223,11 @@ for f in fileList:  # for the number of items in fileList
 
     if g[0] in keeperList:  # if file in targets was found in the keeperList (items we've marked in config.txt)...
         h = pathlib.Path(f).joinpath(pathHead, f)  # ex. join directory path with stopsign.png for full path to image
-        # h = pathlib.PureWindowsPath(h.as_posix())  # changing slashes for later use with windows libraries
+        # h = h.as_posix()
+        h = pathlib.PureWindowsPath(h.as_posix())  # changing slashes for later use with windows libraries
+        print(h)
+        # if drive name is lowercase, convert to string (h = str(h)) then h.captalize()
+
         #  The pathlib library works with Linux-style paths, but we need windows-style paths for scanimage()
         finalFileList.append(h)  # add all of our final filepaths to a list called finalFileList
 
@@ -216,6 +241,7 @@ while 1:  # wait for user to press 'g' before we begin checking for alert matche
     print('entering program loop')
     #  Start of WindowsProcess.py infinite loop segment
     current_count = count_processes(ulist, process_read())  # store the current count of running processes
+    print(reset_count)
     if initial_count == current_count:  # check for differences
         print(current_count)  # print current processes
     elif reset_count == 0:  # check if reset is complete
@@ -228,8 +254,9 @@ while 1:  # wait for user to press 'g' before we begin checking for alert matche
     #  time.sleep(process_time)
     #  End of WindowsProcess.py infinite loop segment
     #  Start of DetectImage.py infinite loop segment
-    screenshot1 = pyautogui.screenshot()  # take a screenshot of current screen an save as 'screenshot1.png')
-    screenshot1.save(pathScreenshot)
+
+    window_capture()  # take a screenshot of current screen an save as 'screenshot1.png')
+
     img = cv2.imread(pathScreenshot)
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # cv2.imshow("Screenshot", img)
@@ -240,7 +267,7 @@ while 1:  # wait for user to press 'g' before we begin checking for alert matche
         fileCounter = fileCounter + 1  # increment to scan the next image in the list
         # items can be removed or added from this list to enable and disable alert tracking.
         # cv2.waitKey(0)  # pause the program while the image is displayed
-    os.remove(pathScreenshot)  # delete the screenshot we took
+    # os.remove(pathScreenshot)  # delete the screenshot we took
     time.sleep(1)  # pause for a moment before checking a new screenshot for resource conservation purposes.
 
     # can remove if desired or add more delay, doesn't matter but note that currently 1 second per sweep of image
