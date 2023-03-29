@@ -120,7 +120,7 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
     w, h = target_img.shape[::-1]  # get info on target img and convert to a width and height value
     res = cv2.matchTemplate(img_gray, target_img, cv2.TM_CCOEFF_NORMED)  # check for matches of target on
     # matchTemplate returns a set of confidence values based on image size
-    threshold = 0.65  # threshold for res values that we care about (if 80% + confident, it's a hit right now).
+    threshold = 0.67  # threshold for res values that we care about (if 80% + confident, it's a hit right now).
     loc = np.where(res >= threshold)  # this will only care about hits over our threshold
     for pt in zip(*loc[::-1]):  # start the detection loop which paints rectangles on our matches
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
