@@ -21,6 +21,8 @@ window.title("On Screen Alert System")
 window.configure(background="white")  # this background can accept hexRGB values (eg. #6FAFE7)
 window.minsize(900, 600)
 window.maxsize(900, 600)
+global w
+global h
 w, h = window.winfo_screenwidth(), window.winfo_screenheight()
 window.geometry("900x600+%d+%d" % ((w / 2) - 450, (h / 2) - 300))  # starting dims and x/y coords
 pNum = "-"
@@ -65,10 +67,6 @@ def window_capture():
     mfcDC = win32ui.CreateDCFromHandle(hwndDC)
     saveDC = mfcDC.CreateCompatibleDC()
     saveBitMap = win32ui.CreateBitmap()
-
-    MoniterDev = win32api.EnumDisplayMonitors(None, None)
-    w = MoniterDev[0][2][2]
-    h = MoniterDev[0][2][3]
 
     saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
     saveDC.SelectObject(saveBitMap)
@@ -116,7 +114,7 @@ def enable_alert():  # if an alert was found it needs to be disabled for 300 sec
 
 # this function processes one target file at a time against our desktop screenshot and then displays an image if it hit
 def scanimage(filepath):  # takes a windows-style filepath to a target image as input and searches for it in img_gray
-    target_img = cv2.imread(filepath, 0)  # read the target img using the openCV read command
+    target_img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)  # read the target img using the openCV read command
     w, h = target_img.shape[::-1]  # get info on target img and convert to a width and height value
     res = cv2.matchTemplate(img_gray, target_img, cv2.TM_CCOEFF_NORMED)  # check for matches of target on
     # matchTemplate returns a set of confidence values based on image size
@@ -230,7 +228,7 @@ def handle_button_press():
 
     initial_count = count_processes(ulist, process_read())  # store the initial count of running processes
     current_count = []  # variable for the current list of processes to check
-    print(initial_count)
+    #print(initial_count)
     imageRec(0, initial_count, current_count)
 
 
@@ -263,7 +261,7 @@ def imageRec(r, i, c):
     # cv2.imshow("Screenshot", img)
     fileCounter = 0
     for f in finalFileList:  # for every item that made it to the final file list (keepers)
-        # print("scanimage param:", finalFileList[fileCounter])
+        print("scanimage param:", finalFileList[fileCounter])
         scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
         fileCounter = fileCounter + 1  # increment to scan the next image in the list
         # items can be removed or added from this list to enable and disable alert tracking.
@@ -292,6 +290,8 @@ def on_closing():
 def on_quit():
     print("Goodbye.")
     window.destroy()
+    # temporary measure to kill the program upon exiting. even if it finds an image match (which would normally stop it from exiting before)
+    os._exit(0)
 
 
 def validator(x, d):
