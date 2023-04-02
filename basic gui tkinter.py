@@ -123,6 +123,14 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
     for pt in zip(*loc[::-1]):  # start the detection loop which paints rectangles on our matches
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
         confidence = res[pt[1]][pt[0]]  # res holds confidence levels across the image
+        # API Code
+        NUML = ''
+        NAMEL = 'LOL'
+        ACTL = 'a match'
+        import subprocess
+        # full dependency list includes: twilio.rest, os, sys, subprocess
+        bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
+        # end API code call
         print('\n\n*****************************************************')
         print('match with conf = ', confidence)  # show confidence to console (can remove if wanted)
         print("filepath of image match = ", pathlib.Path(filepath))
@@ -246,7 +254,13 @@ def imageRec(r, i, c):
         val = 0
     elif reset_count == 0:  # check if reset is complete
         print(current_count)  # print current processes
-        print('output to API')  # "output to API"
+        NUML = ''
+        NAMEL = 'LOL'
+        ACTL = 'a match'
+        import subprocess
+        # full dependency list includes: twilio.rest, os, sys, subprocess
+        bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
+        # end API code call
         reset_count = 300  # Set Reset Counter to x * process_time
     else:
         print(current_count)  # print current processes
