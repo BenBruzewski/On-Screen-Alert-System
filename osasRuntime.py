@@ -125,7 +125,7 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
         confidence = res[pt[1]][pt[0]]  # res holds confidence levels across the image
         # API Code caller on match detection
-        api_caller(True)
+        api_caller(True, pathlib.Path(filepath).stem)
         # end API code call
         #print('\n\n*****************************************************')
         #print('match with conf = ', confidence)  # show confidence to console (can remove if wanted)
@@ -148,16 +148,18 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         break #forcibly break loop, as the detected message only needs to be called once since it was detected
 
 # API Call handler
-def api_caller(typeOfNotif):
+def api_caller(typeOfNotif, optObj):
     # variable literal meanings in order from left to right:
     # 1 - what type of alert is detected. image or process (True for image, False for process)
     # 2 - the optional object to provide contextual information (if needed. if not, just pass in a 0)
     NUML = outVal.cget("text")
     if typeOfNotif == True:
         NAMEL = 'OSAS\'s image recognition'
+        ACTL = 'detected a ' + str(optObj) + ' notification'
     else:
         NAMEL = 'OSAS\'s process recognition'
-    ACTL = 'detected a notification'
+        ACTL = 'detected a process-based notification'
+    print("alert:", NAMEL, "has", ACTL, "pending")
     # full dependency list includes: twilio.rest, os, sys, subprocess
     #bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
 
@@ -272,7 +274,7 @@ def imageRec(r, i, c):
         val = 0
     elif reset_count == 0:  # check if reset is complete
         #print(current_count)  # print current processes
-        api_caller(False)
+        api_caller(False, 0)
         # end API code call
         reset_count = 300  # Set Reset Counter to x * process_time
     else:
@@ -479,6 +481,7 @@ runButtonFrame.pack(expand=tk.TRUE)
 runningFrame.pack(expand=tk.TRUE)
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
+
 
 # start Tkinter
 window.mainloop()
