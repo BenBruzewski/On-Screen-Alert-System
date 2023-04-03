@@ -5,6 +5,7 @@ from ast import If
 import pathlib
 import os
 import time
+import subprocess
 
 import win32gui
 import win32ui
@@ -118,22 +119,17 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
     w, h = target_img.shape[::-1]  # get info on target img and convert to a width and height value
     res = cv2.matchTemplate(img_gray, target_img, cv2.TM_CCOEFF_NORMED)  # check for matches of target on
     # matchTemplate returns a set of confidence values based on image size
-    threshold = 0.67  # threshold for res values that we care about (if 80% + confident, it's a hit right now).
+    threshold = 0.67  # threshold for res values that we care about (if 67% + confident, it's a match).
     loc = np.where(res >= threshold)  # this will only care about hits over our threshold
     for pt in zip(*loc[::-1]):  # start the detection loop which paints rectangles on our matches
         cv2.rectangle(img, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)  # draw a rectangle where the hit is
         confidence = res[pt[1]][pt[0]]  # res holds confidence levels across the image
-        # API Code
-        NUML = ''
-        NAMEL = 'LOL'
-        ACTL = 'a match'
-        import subprocess
-        # full dependency list includes: twilio.rest, os, sys, subprocess
-        bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
+        # API Code caller on match detection
+        api_caller(True)
         # end API code call
-        print('\n\n*****************************************************')
-        print('match with conf = ', confidence)  # show confidence to console (can remove if wanted)
-        print("filepath of image match = ", pathlib.Path(filepath))
+        #print('\n\n*****************************************************')
+        #print('match with conf = ', confidence)  # show confidence to console (can remove if wanted)
+        #print("filepath of image match = ", pathlib.Path(filepath))
         if finalFileList.__contains__(pathlib.Path(filepath)):  # this is b/c sometimes an alert is already cleared
             finalFileList.remove(pathlib.Path(filepath))  # the type casting is very important, must be pathlib path!
         # remove this filepath from the finalFileList temporarily (on cooldown)
@@ -147,30 +143,53 @@ def scanimage(filepath):  # takes a windows-style filepath to a target image as 
         cooldownCount = cooldownCount + 1  # increment once per item on CD
         # starting the timer above , note that timer.cancel() can stop a timer if it hasn't gone off yet
         # cv2.imshow(' ', img)  # display the image with our "confidence" rectangles on it
-        print("filelist after cooldown: ", finalFileList)
-        print('*****************************************************\n\n')
-        break
+        #print("filelist after cooldown: ", finalFileList)
+        #print('*****************************************************\n\n')
+        break #forcibly break loop, as the detected message only needs to be called once since it was detected
 
+# API Call handler
+def api_caller(typeOfNotif):
+    # variable literal meanings in order from left to right:
+    # 1 - what type of alert is detected. image or process (True for image, False for process)
+    # 2 - the optional object to provide contextual information (if needed. if not, just pass in a 0)
+    NUML = outVal.cget("text")
+    if typeOfNotif == True:
+        NAMEL = 'OSAS\'s image recognition'
+    else:
+        NAMEL = 'OSAS\'s process recognition'
+    ACTL = 'detected a notification'
+    # full dependency list includes: twilio.rest, os, sys, subprocess
+    #bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
 
 # handler to accept user's update from phone number text box
 def handle_pNum_update_press():
     pNum = phoneEntry.get()
     if (len(pNum) != 10):
         outVal.configure(text="Invalid Phone #. Please use 10 digits")
+        startButton.configure(state=tk.DISABLED)
     else:
         pNum = pNum[:3] + "-" + pNum[3:6] + "-" + pNum[6:]
         outVal.configure(text=pNum)
+        startButton.configure(state=tk.NORMAL)
 
 
-# currently debugs output into terminal
+# handles the start button being pressed
 def handle_button_press():
     # temporary output showing what is set up during the "running" portion of the GUI
     runPhoneLabel.configure(text=outVal.cget("text"))
     boxVals = [discCallBox.get(), discCallHalfBox.get(), discTextBox.get(), fireWBox.get(), dotaBox.get(), lolBox.get(),
                stopBox.get(), steamBox.get(), csgoBox.get(), mailBox.get()]
-    runCB2Label.configure(text="%d, %d, %d, %d, %d, %d, %d, %d, %d, %d" % (
-        boxVals[0], boxVals[1], boxVals[2], boxVals[3], boxVals[4], boxVals[5], boxVals[6], boxVals[7], boxVals[8],
-        boxVals[9]))
+    callsigns = ["Discord Call", "Discord Call (Half Size)", "Discord Text", "Firewall Notification", "Dota Match Notif.", "League of Legends Notif", 
+                "Stop Sign", "Steam Download Finished", "CS:GO Match Notif.", "Windows Mail Notif."]
+    j = 0
+    runMsg = ""
+    while j < len(boxVals):
+        if boxVals[j] == 1 and j != (len(boxVals)-1):
+            runMsg += callsigns[j] + "\n"
+        elif boxVals[j] == 1:
+            runMsg += callsigns[j]
+        j += 1
+    runCB2Label.configure(text=runMsg)
     # modify the config file
     msg = ""
     with open("config.txt", "r") as f:
@@ -236,7 +255,6 @@ def handle_button_press():
 
     initial_count = count_processes(ulist, process_read())  # store the initial count of running processes
     current_count = []  # variable for the current list of processes to check
-    #print(initial_count)
     imageRec(0, initial_count, current_count)
 
 
@@ -250,20 +268,15 @@ def imageRec(r, i, c):
     #  Start of WindowsProcess.py infinite loop segment
     current_count = count_processes(ulist, process_read())  # store the current count of running processes
     if initial_count == current_count:  # check for differences
-        print(current_count)  # print current processes
+        #print(current_count)  # print current processes
         val = 0
     elif reset_count == 0:  # check if reset is complete
-        print(current_count)  # print current processes
-        NUML = ''
-        NAMEL = 'LOL'
-        ACTL = 'a match'
-        import subprocess
-        # full dependency list includes: twilio.rest, os, sys, subprocess
-        bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
+        #print(current_count)  # print current processes
+        api_caller(False)
         # end API code call
         reset_count = 300  # Set Reset Counter to x * process_time
     else:
-        print(current_count)  # print current processes
+        #print(current_count)  # print current processes
         reset_count = reset_count - 1  # iterate counter down by 1
     #  time.sleep(process_time)
     #  End of WindowsProcess.py infinite loop segment
@@ -275,7 +288,7 @@ def imageRec(r, i, c):
     # cv2.imshow("Screenshot", img)
     fileCounter = 0
     for f in finalFileList:  # for every item that made it to the final file list (keepers)
-        print("scanimage param:", finalFileList[fileCounter])
+        #print("scanimage param:", finalFileList[fileCounter])
         scanimage(str(finalFileList[fileCounter]))  # hard casting to a string here to ensure it fits imread()
         fileCounter = fileCounter + 1  # increment to scan the next image in the list
         # items can be removed or added from this list to enable and disable alert tracking.
@@ -289,11 +302,12 @@ def imageRec(r, i, c):
 
 # function that runs whether the user presses the "X" in the top right or if they hit the "Cancel" button
 def on_closing():
-    print("\nreturning to main window...")
+    #print("\nreturning to main window...")
     try:
         os.remove(pathScreenshot)
     except FileNotFoundError:
-        print("file not found")
+        fnf = 1
+        #print("file not found")
     window.after_cancel(afterID)
     global finalFileList
     finalFileList = []
@@ -302,7 +316,7 @@ def on_closing():
 
 
 def on_quit():
-    print("Goodbye.")
+    #print("Goodbye.")
     window.destroy()
     # temporary measure to kill the program upon exiting. even if it finds an image match (which would normally stop it from exiting before)
     os._exit(0)
@@ -399,6 +413,7 @@ checkFrame.pack(expand=tk.TRUE)
 startFrame = tk.Frame(leftFrame, bg='lightgrey')
 startButton = tk.Button(startFrame, text="Start", command=handle_button_press)
 startButton.pack()
+startButton.configure(state=tk.DISABLED) # start should be disbaled until user gives proper formatted phone number
 bufFrame3 = tk.Frame(startFrame, height=10, bg='lightgrey').pack()
 closeButton = tk.Button(startFrame, text="Close", command=on_quit)
 closeButton.pack()
@@ -446,7 +461,7 @@ bufFrame = tk.Frame(runningFrame, height=20, bg='grey').pack()
 
 # status window listing checkbox choices (currently just integer values)
 runCheckboxFrame = tk.Frame(runningFrame, bg='grey')
-runCBLabel = tk.Label(runCheckboxFrame, text="Array of detected options selected:", bg='grey')
+runCBLabel = tk.Label(runCheckboxFrame, text="Initial options selected:", bg='grey')
 runCBLabel.pack()
 runCB2Label = tk.Label(runCheckboxFrame, text="youwontseethisbuffer", bg='grey')
 runCB2Label.pack()
