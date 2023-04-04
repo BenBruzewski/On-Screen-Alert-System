@@ -159,6 +159,7 @@ def api_caller(typeOfNotif, optObj):
     else:
         NAMEL = 'OSAS\'s process recognition'
         ACTL = 'detected a process-based notification'
+    print("number:", NUML)
     print("alert:", NAMEL, "has", ACTL, "pending")
     # full dependency list includes: twilio.rest, os, sys, subprocess
     #bopopo = subprocess.Popen(['python', 'commandLineVersion.py', NUML, NAMEL, ACTL])
@@ -345,13 +346,13 @@ runningWindow.protocol("WM_DELETE_WINDOW", on_closing)
 window.protocol("WM_DELETE_WINDOW", on_quit)
 
 # image storage
-osasIMG = tk.PhotoImage(file="01.gif")
+osasIMG = tk.PhotoImage(file="osasLogoLarge.gif")
 
 # messing with Frames
 # frame used for logo
-imgFrame = tk.Frame(window, width=628, height=207,
-                    bg='lightgrey')  # w/h is catered towards image provided with x and y + 5 each. currently 623x202
-tk.Label(imgFrame, image=osasIMG, bg='white', relief=tk.RAISED, bd=2).pack()
+imgFrame = tk.Frame(window, width=628, height=507,
+                    bg='#0E6AC7')  # w/h is catered towards image provided with x and y + 5 each. currently 623x202
+tk.Label(imgFrame, image=osasIMG, bg='white', bd=0).pack()
 imgFrame.pack(fill=tk.BOTH)
 
 # compact frame used for inputs on left and outputs/status on right
