@@ -1,0 +1,20 @@
+<REDACTED ACCT SID>
+<REDACTED AUTH TOKEN>
+<REDACTED PHONE NUMBER>
+
+#place SID on first line, AUTH on second line, FROM_NUMBER on third
+
+#Just in case that does not make sense
+#This will function as long as the first three lines are
+#1. Your String Identifier, found on your TWILIO account page, 34 digits starts with AC
+#2. Your AUTH, 32 digits of hex from the same page. Do not publish
+#3. Your Virtual Number. +1XXXXXXXXX, +1 followed by ten digits
+# Twilio will sell you one for peanuts
+#and nothing else
+#Run userSIDAUTHcheck.py to double check, anything other than true and you need to check for stray characters in notepad++
+#Or create an account on Twilio, then grab a legit SID/AUTH/FROM_NUM
+
+#
+#.env format if you're feeling clever
+#TWILIO_ACCOUNT_SID = _SID goes here_
+#TWILIO_AUTH_TOKEN = _AUTH goes here_

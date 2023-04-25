@@ -1,4 +1,0 @@
-# ignore sensitive files to ensure they don't get uploaded to an online repo
-commandLineVersion.py
-SID_AUTH_FILE.txt
-userSIDAUTHcheck.py
