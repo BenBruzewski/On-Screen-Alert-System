@@ -1,0 +1,13 @@
+<REDACTED ACCT SID>
+<REDACTED AUTH TOKEN>
+<REDACTED PHONE NUMBER>
+#place SID on first line, AUTH on second line, FROM_NUMBER on third
+
+
+#to_Number
+#from_Number
+#Above two variables should be written to the empty lines above them
+#
+#.env format
+#TWILIO_ACCOUNT_SID = _SID goes here_
+#TWILIO_AUTH_TOKEN = _AUTH goes here_
