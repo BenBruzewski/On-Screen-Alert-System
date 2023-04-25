@@ -18,8 +18,8 @@ a text message based on what phone number they entered into the program earlier 
 
 1. Launch OSAS via osasRuntime.py.
 2. Enter your phone number in the text entry box and hit submit.
-   _ This box only accepts up to 10 numerical digits. Do not worry about the hyphens, it will automatically acount for them.
-   _ If you attempt to enter an invalid phone number (a number that is not 10 digits long), or don't enter a number, the program will not let you launch hit the "Start" button.
+   * This box only accepts up to 10 numerical digits. Do not worry about the hyphens, it will automatically acount for them.
+   * If you attempt to enter an invalid phone number (a number that is not 10 digits long), or don't enter a number, the program will not let you launch hit the "Start" button.
 3. Select all checkbox values you want notifications to be detected for.
 4. Click the "Start" button to run the program.
 
