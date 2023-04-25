@@ -1,6 +1,7 @@
 # On-Screen-Alert-System deployment branch
 
 This branch acts as the final version (for now) of the OSAS program runtime.
+This is a Repo for Team 6's CPE496 Project: "On-Screen Alert System"
 
 Once a copy is cloned/downloaded, the user can fill in the redacted data listed in the SID_AUTH_FILE.txt with their own respective data (or contact the creators for the demo data).
 Once the file has been filled out, the user can run osasRuntime.py (`python3 osasRuntime.py` or your choice alternative) to launch the program and let it work its magic (you might need to run InstallModules.bat first).
@@ -9,6 +10,14 @@ Once the file has been filled out, the user can run osasRuntime.py (`python3 osa
 ## What is OSAS?
 
 ![The On Screen Alert System Logo](./osasLogoLarge.gif)
+
+Developers for this project include:
+
+Ben Bruzewski, Bryce Schaefer, Robbie Cabra, Ryan Colborn, Shuchita Syema, Brendan Romanczuk
+
+On-Screen Alert System has two components: One for Image Recognition / Software Detection Software, and another for Mobile Notifications via Text Messages
+
+The Text Messaging component uses Twilio's Text Message API to deliver the message from a Twilio-provided number.
 
 The On-Screen-Alert-System (or OSAS) is a program made to provide text-based notifications for applications or notifications that would not normally provide remote notifications.
 For example, think of firewall/antivirus/install status pop-ups. These never send text messages alerting a user that they popped up. OSAS is capable of recognizing these pop-ups (should the user enable them) and will send the user
